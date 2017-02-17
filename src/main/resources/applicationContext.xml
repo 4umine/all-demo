@@ -1,0 +1,110 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xmlns:context="http://www.springframework.org/schema/context"
+       xmlns:task="http://www.springframework.org/schema/task"
+       xsi:schemaLocation="http://www.springframework.org/schema/beans
+       http://www.springframework.org/schema/beans/spring-beans.xsd
+       http://www.springframework.org/schema/context
+       http://www.springframework.org/schema/context/spring-context.xsd
+       http://www.springframework.org/schema/task
+       http://www.springframework.org/schema/task/spring-task.xsd">
+
+    <!-- scan annotation -->
+    <context:component-scan base-package="com.coderbike"/>
+
+    <!-- 扫描@Scheduled -->
+    <task:annotation-driven/>
+
+    <!-- 配置connectionFactory -->
+
+    <!-- connectionFactory concrete implementation -->
+    <bean id="targetConnectionFactory" class="org.apache.activemq.ActiveMQConnectionFactory">
+        <property name="brokerURL" value="tcp://localhost:61616"/>
+    </bean>
+
+    <!-- pooled connectionFactory -->
+    <bean id="pooledConnectionFactory" class="org.apache.activemq.pool.PooledConnectionFactory">
+        <property name="connectionFactory" ref="targetConnectionFactory"/>
+        <property name="maxConnections" value="10"/>
+    </bean>
+
+    <!-- Spring manage connectionFactory -->
+    <bean id="connectionFactory" class="org.springframework.jms.connection.SingleConnectionFactory">
+        <property name="targetConnectionFactory" ref="pooledConnectionFactory" />
+    </bean>
+
+    <!-- 配置producer -->
+
+    <!-- Spring jms util to send and recieve message -->
+    <bean id="jmsTemplate" class="org.springframework.jms.core.JmsTemplate">
+        <property name="connectionFactory" ref="connectionFactory"/>
+        <property name="messageConverter" ref="emailMessageConverter" />
+    </bean>
+
+    <!-- ================== 配置destination ================== -->
+
+    <!-- queue destination -->
+    <bean id="queueDestination" class="org.apache.activemq.command.ActiveMQQueue">
+        <constructor-arg>
+            <value>queue</value>
+        </constructor-arg>
+    </bean>
+
+    <!-- session queue destination -->
+    <bean id="sessionAwareQueue" class="org.apache.activemq.command.ActiveMQQueue">
+        <constructor-arg>
+            <value>sessionAwareQueue</value>
+        </constructor-arg>
+    </bean>
+
+    <!-- adapter queue destination -->
+    <bean id="adapterDestination" class="org.apache.activemq.command.ActiveMQQueue">
+        <constructor-arg>
+            <value>adapterQueue</value>
+        </constructor-arg>
+    </bean>
+
+    <!-- ================== 配置MessageListener ================== -->
+
+    <!-- MessageListener -->
+    <bean id="consumerMessageListener" class="com.coderbike.activemq.spirng_jms.ConsumerMessageListener" />
+
+    <bean id="jmsContainer" class="org.springframework.jms.listener.DefaultMessageListenerContainer">
+        <property name="connectionFactory" ref="connectionFactory" />
+        <property name="destination" ref="queueDestination" />
+        <property name="messageListener" ref="consumerMessageListener" />
+    </bean>
+
+    <!-- SesseionMessageListener -->
+    <bean id="consumerSessionMessageListener" class="com.coderbike.activemq.spirng_jms.ConsumerSessionMessageListener" />
+
+    <bean id="sessionAwareListenerContainer"
+          class="org.springframework.jms.listener.DefaultMessageListenerContainer">
+        <property name="connectionFactory" ref="connectionFactory" />
+        <property name="destination" ref="sessionAwareQueue" />
+        <property name="messageListener" ref="consumerSessionMessageListener" />
+    </bean>
+
+    <!-- message listener adapter -->
+    <bean id="messageListenerAdapter" class="org.springframework.jms.listener.adapter.MessageListenerAdapter">
+        <property name="delegate">
+            <bean class="com.coderbike.activemq.spirng_jms.ConsumerAdapterListener"/>
+        </property>
+        <!-- 不指定defaultListenerMethod，则默认调用handleMessage -->
+        <property name="defaultListenerMethod" value="recieveConverteMsg" />
+        <!-- 指定消息默认的destination -->
+        <property name="defaultResponseDestination" ref="queueDestination" />
+    </bean>
+
+    <!-- message listener adapter container -->
+    <bean id="messageListenerAdapterContainer" class="org.springframework.jms.listener.DefaultMessageListenerContainer">
+        <property name="connectionFactory" ref="connectionFactory"/>
+        <property name="destination" ref="adapterDestination"/>
+        <property name="messageListener" ref="messageListenerAdapter"/>
+        <property name="messageConverter" ref="emailMessageConverter" />
+    </bean>
+
+    <!-- 消息转换器MessageConverter -->
+    <bean id="emailMessageConverter" class="com.coderbike.activemq.message_converter.EmailMessageConverter" />
+</beans>
