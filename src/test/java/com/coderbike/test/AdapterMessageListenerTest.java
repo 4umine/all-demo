@@ -1,5 +1,6 @@
 package com.coderbike.test;
 
+import com.coderbike.activemq.jms_crud.User;
 import com.coderbike.activemq.message_converter.Email;
 import com.coderbike.activemq.spirng_jms.ProduceService;
 import com.coderbike.test.base.BaseTest;
@@ -33,5 +34,10 @@ public class AdapterMessageListenerTest extends BaseTest {
     public void sendConverteMsg() {
         Email email = new Email("刀刀", "imant@outlook.com", "adapter转换消息");
         produceService.sendAndConverteMsg(adapterDestination, email);
+    }
+
+    @Test
+    public void txTest() {
+        produceService.sendAndConverteMsg(adapterDestination, new User("刀刀", 3));
     }
 }

@@ -30,9 +30,14 @@ public class ProducerServiceImpl implements ProduceService {
     @Qualifier("queueDestination")
     private Destination responseDes;
 
+    /**
+     * <p>生产者发送消息<p/>
+     * author: imant
+     * date: 2017/2/20 16:53
+     */
     @Override
     public void sendMsg(Destination destination, String message) {
-        System.out.println("生产者发送了一条消息：" + message);
+        System.out.println("生产者：" + message);
         jmsTemplate.send(destination, new MessageCreator() {
             @Override
             public Message createMessage(Session session) throws JMSException {

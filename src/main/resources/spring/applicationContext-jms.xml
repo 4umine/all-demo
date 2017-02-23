@@ -1,45 +1,70 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <beans xmlns="http://www.springframework.org/schema/beans"
        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-       xmlns:context="http://www.springframework.org/schema/context"
-       xmlns:task="http://www.springframework.org/schema/task"
        xsi:schemaLocation="http://www.springframework.org/schema/beans
-       http://www.springframework.org/schema/beans/spring-beans.xsd
-       http://www.springframework.org/schema/context
-       http://www.springframework.org/schema/context/spring-context.xsd
-       http://www.springframework.org/schema/task
-       http://www.springframework.org/schema/task/spring-task.xsd">
+       http://www.springframework.org/schema/beans/spring-beans.xsd">
 
-    <!-- scan annotation -->
-    <context:component-scan base-package="com.coderbike"/>
+    <!-- datasource -->
+    <bean id="dataSource" class="com.atomikos.jdbc.AtomikosDataSourceBean"
+          init-method="init" destroy-method="close">
+        <property name="uniqueResourceName" value="ds1" />
+        <!--        <property name="xaDataSourceClassName" value="${jdbc.driverClassName}" /> -->
+        <property name="xaDataSourceClassName" value="com.mysql.jdbc.jdbc2.optional.MysqlXADataSource" />
+        <property name="xaProperties">
+            <props>
+                <prop key="URL">${jdbc.url}</prop>
+                <prop key="user">${jdbc.username}</prop>
+                <prop key="password">${jdbc.password}</prop>
+            </props>
+        </property>
+        <!--        #连接池中保留的最小连接数 -->
+        <property name="minPoolSize" value="5" />
+        <!--        #连接池中保留的最大连接数  -->
+        <property name="maxPoolSize" value="20" />
+        <!--        #最大空闲时间,60秒内未使用则连接被丢弃。若为0则永不丢弃。Default:  -->
+        <property name="maxIdleTime" value="60" />
+        <property name="testQuery">
+            <value>select 1</value>
+        </property>
+    </bean>
 
-    <!-- 扫描@Scheduled -->
-    <task:annotation-driven/>
-
-    <!-- 配置connectionFactory -->
+    <!-- ================== 配置connectionFactory ================== -->
 
     <!-- connectionFactory concrete implementation -->
-    <bean id="targetConnectionFactory" class="org.apache.activemq.ActiveMQConnectionFactory">
+    <bean id="connectionFactory" class="org.apache.activemq.ActiveMQXAConnectionFactory">
         <property name="brokerURL" value="tcp://localhost:61616"/>
     </bean>
 
     <!-- pooled connectionFactory -->
-    <bean id="pooledConnectionFactory" class="org.apache.activemq.pool.PooledConnectionFactory">
-        <property name="connectionFactory" ref="targetConnectionFactory"/>
-        <property name="maxConnections" value="10"/>
-    </bean>
+    <!--<bean id="pooledConnectionFactory" class="org.apache.activemq.pool.PooledConnectionFactory">-->
+        <!--<property name="connectionFactory" ref="targetConnectionFactory"/>-->
+        <!--<property name="maxConnections" value="10"/>-->
+    <!--</bean>-->
 
     <!-- Spring manage connectionFactory -->
-    <bean id="connectionFactory" class="org.springframework.jms.connection.SingleConnectionFactory">
-        <property name="targetConnectionFactory" ref="pooledConnectionFactory" />
+    <!--<bean id="connectionFactory" class="org.springframework.jms.connection.SingleConnectionFactory">-->
+        <!--<property name="targetConnectionFactory" ref="pooledConnectionFactory" />-->
+    <!--</bean>-->
+
+    <bean id="amqConnectionFactory" class="com.atomikos.jms.AtomikosConnectionFactoryBean" init-method="init">
+        <property name="uniqueResourceName" value="XAactiveMQ" />
+        <property name="xaConnectionFactory" ref="connectionFactory" />
+        <property name="poolSize" value="5"/>
     </bean>
 
-    <!-- 配置producer -->
+    <!-- ================== 配置producer ================== -->
 
     <!-- Spring jms util to send and recieve message -->
+    <!--<bean id="jmsTemplate" class="org.springframework.jms.core.JmsTemplate">-->
+        <!--<property name="connectionFactory" ref="connectionFactory"/>-->
+        <!--&lt;!&ndash;<property name="messageConverter" ref="emailMessageConverter" />&ndash;&gt;-->
+    <!--</bean>-->
+
     <bean id="jmsTemplate" class="org.springframework.jms.core.JmsTemplate">
-        <property name="connectionFactory" ref="connectionFactory"/>
-        <property name="messageConverter" ref="emailMessageConverter" />
+        <property name="connectionFactory" ref="amqConnectionFactory"/>
+        <property name="receiveTimeout" value="2000" />
+        <property name="defaultDestination" ref="queueDestination"/>
+        <!--<property name="messageConverter" ref="emailMessageConverter" />-->
     </bean>
 
     <!-- ================== 配置destination ================== -->
@@ -74,6 +99,11 @@
         <property name="connectionFactory" ref="connectionFactory" />
         <property name="destination" ref="queueDestination" />
         <property name="messageListener" ref="consumerMessageListener" />
+        <!-- 开启事务 -->
+        <!--<property name="sessionTransacted" value="true" />-->
+
+        <!-- 配置事务管理器，则sessionTransacted失效 -->
+        <property name="transactionManager" ref="transactionManager" />
     </bean>
 
     <!-- SesseionMessageListener -->
@@ -93,7 +123,7 @@
         </property>
         <!-- 不指定defaultListenerMethod，则默认调用handleMessage -->
         <property name="defaultListenerMethod" value="recieveConverteMsg" />
-        <!-- 指定消息默认的destination -->
+        <!-- 指定回复消息默认的destination -->
         <property name="defaultResponseDestination" ref="queueDestination" />
     </bean>
 
@@ -107,4 +137,5 @@
 
     <!-- 消息转换器MessageConverter -->
     <bean id="emailMessageConverter" class="com.coderbike.activemq.message_converter.EmailMessageConverter" />
+
 </beans>

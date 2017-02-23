@@ -5,8 +5,6 @@ import org.springframework.context.support.ClassPathXmlApplicationContext;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
-import java.util.Date;
-
 /**
  * <p>描述<p/>
  * Created with IDEA
@@ -18,10 +16,10 @@ public class AnnotationJob {
 
     @Scheduled(cron = "0/2 * * * * *")
     public void sayHello() {
-        System.out.println("hello " + new Date());
+        //System.out.println("hello " + new Date());
     }
 
     public static void main(String[] args) {
-        ApplicationContext context = new ClassPathXmlApplicationContext("applicationContext.xml");
+        ApplicationContext context = new ClassPathXmlApplicationContext("spring/applicationContext.xml");
     }
 }

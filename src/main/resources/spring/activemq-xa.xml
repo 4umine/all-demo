@@ -1,0 +1,58 @@
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xmlns:amq="http://activemq.apache.org/schema/core"
+       xmlns:jms="http://www.springframework.org/schema/jms"
+       xsi:schemaLocation="http://www.springframework.org/schema/beans
+        http://www.springframework.org/schema/beans/spring-beans-4.1.xsd
+        http://www.springframework.org/schema/jms
+        http://www.springframework.org/schema/jms/spring-jms-4.1.xsd
+        http://activemq.apache.org/schema/core
+        http://activemq.apache.org/schema/core/activemq-core-5.13.0.xsd">
+
+    <!-- 重发策略：最多重发次数=maximumRedeliveries -->
+    <amq:redeliveryPolicy id="redeliveryPolicy" maximumRedeliveries="6" />
+
+    <!-- 抓取策略 -->
+    <amq:prefetchPolicy id="prefetchPolicy" queuePrefetch="5" topicPrefetch="5" />
+
+    <!-- activeMQ连接信息，XA事务 -->
+    <amq:xaConnectionFactory id="jmsXaConnectionFactory"
+                             brokerURL="${activemq.brokerURL}"
+                             userName="${activemq.username}"
+                             password="${activemq.password}"
+                             redeliveryPolicy="#redeliveryPolicy"
+                             alwaysSessionAsync="false"
+                             alwaysSyncSend="true"
+                             prefetchPolicy="#prefetchPolicy"/>
+
+    <bean id="amqConnectionFactory"
+          class="com.atomikos.jms.AtomikosConnectionFactoryBean" init-method="init" destroy-method="close">
+        <property name="uniqueResourceName" value="XAactiveMQ"/>
+        <property name="xaConnectionFactory" ref="jmsXaConnectionFactory"/>
+        <property name="poolSize" value="100"/>
+    </bean>
+
+    <!-- queue类型的jmsTemplate -->
+    <bean id="jmsTemplate" class="org.springframework.jms.core.JmsTemplate">
+        <constructor-arg ref="amqConnectionFactory" />
+        <property name="receiveTimeout" value="2000" />
+        <property name="pubSubDomain" value="false" />
+    </bean>
+
+    <!-- queue -->
+    <amq:queue id="queueDestination" physicalName="queueDestination" />
+
+    <!-- MessageListener -->
+    <bean id="consumerMessageListener" class="com.coderbike.activemq.spirng_jms.ConsumerMessageListener" />
+
+    <!-- message listener container -->
+    <jms:listener-container
+            destination-type="queue"
+            container-type="default"
+            connection-factory="amqConnectionFactory"
+            transaction-manager="jtaTransactionManager"
+            acknowledge="transacted">
+        <jms:listener destination="xinge.queue.push.invokelog" ref="consumerMessageListener" concurrency="5-100" />
+    </jms:listener-container>
+
+</beans>

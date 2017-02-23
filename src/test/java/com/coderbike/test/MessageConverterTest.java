@@ -1,5 +1,6 @@
 package com.coderbike.test;
 
+import com.coderbike.activemq.jms_crud.User;
 import com.coderbike.activemq.message_converter.Email;
 import com.coderbike.activemq.spirng_jms.ProduceService;
 import com.coderbike.test.base.BaseTest;
@@ -34,8 +35,13 @@ public class MessageConverterTest extends BaseTest {
     }
 
     @Test
+    public void distributeTxText() {
+        produceService.sendAndConverteMsg(destination, new User("刀刀", 6));
+    }
+
+    @Test
     public void appContext() {
-        ApplicationContext context = new ClassPathXmlApplicationContext("classpath:applicationContext.xml");
+        ApplicationContext context = new ClassPathXmlApplicationContext("classpath:spring/applicationContext.xml");
         DefaultMessageListenerContainer container = (DefaultMessageListenerContainer) context.getBean("consumerMsgConverterListenerContainer");
         Destination destination = (Destination) context.getBean("msgConverterQueue");
         System.out.println(destination);

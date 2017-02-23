@@ -1,0 +1,63 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xmlns:context="http://www.springframework.org/schema/context"
+       xmlns:task="http://www.springframework.org/schema/task" xmlns:tx="http://www.springframework.org/schema/tx"
+       xsi:schemaLocation="http://www.springframework.org/schema/beans
+       http://www.springframework.org/schema/beans/spring-beans.xsd
+       http://www.springframework.org/schema/context
+       http://www.springframework.org/schema/context/spring-context.xsd
+       http://www.springframework.org/schema/task
+       http://www.springframework.org/schema/task/spring-task.xsd http://www.springframework.org/schema/tx http://www.springframework.org/schema/tx/spring-tx.xsd">
+
+    <!-- scan annotation -->
+    <context:component-scan base-package="com.coderbike"/>
+
+    <!-- scan @Scheduled -->
+    <task:annotation-driven/>
+
+    <!-- ================== jta distribution transaction ================== -->
+
+    <!-- atomikos dataSource -->
+    <!-- datasource -->
+    <bean id="dataSource" class="com.atomikos.jdbc.AtomikosDataSourceBean"
+          init-method="init" destroy-method="close">
+        <property name="uniqueResourceName" value="ds1" />
+        <!--        <property name="xaDataSourceClassName" value="${jdbc.driverClassName}" /> -->
+        <property name="xaDataSourceClassName" value="com.mysql.jdbc.jdbc2.optional.MysqlXADataSource" />
+        <property name="xaProperties">
+            <props>
+                <prop key="URL">${jdbc.url}</prop>
+                <prop key="user">${jdbc.username}</prop>
+                <prop key="password">${jdbc.password}</prop>
+            </props>
+        </property>
+        <property name="minPoolSize" value="5" />
+        <property name="maxPoolSize" value="20" />
+        <!-- 最大空闲时间,60秒内未使用则连接被丢弃。若为0则永不丢弃。Default:  -->
+        <property name="maxIdleTime" value="60" />
+        <property name="testQuery">
+            <value>select 1</value>
+        </property>
+    </bean>
+
+    <bean id="jdbcTemplate" class="org.springframework.jdbc.core.JdbcTemplate">
+        <property name="dataSource" ref="dataSource"/>
+    </bean>
+
+    <bean id="userDao" class="com.coderbike.activemq.jms_crud.UserDaoImpl">
+        <property name="jdbcTemplate" ref="jdbcTemplate" />
+    </bean>
+
+    <!-- 读取配置文件 -->
+    <bean class="org.springframework.beans.factory.config.PropertyPlaceholderConfigurer">
+        <property name="locations">
+            <list>
+                <value>classpath:db/config.properties</value>
+            </list>
+        </property>
+    </bean>
+
+    <!-- import external file -->
+    <import resource="classpath:spring/applicationContext-service.xml" />
+</beans>

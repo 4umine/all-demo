@@ -19,11 +19,11 @@ public class ConsumerAdapterListener {
         return "来自handleMessage的返回消息";
     }
 
-    public void recieveMessage(String message) {
+    public void receiveMessage(String message) {
         System.out.println("AdapterConsumerListener通过recieveMessage处理消息：" + message);
     }
 
-    public void recieveConverteMsg(Email email) {
+    public void receiveConverteMsg(Email email) {
         System.out.println("AdapterConsumerListener通过recieveConverteMsg处理消息" + email.toString());
     }
 }

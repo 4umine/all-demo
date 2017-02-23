@@ -11,7 +11,7 @@ import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
  * author: imant
  * date: 2016/11/16 15:33
  */
-@ContextConfiguration(locations = {"classpath:applicationContext.xml"})
+@ContextConfiguration(locations = {"classpath:spring/applicationContext.xml"})
 @RunWith(SpringJUnit4ClassRunner.class)
 @ActiveProfiles("dev")
 public class BaseTest {

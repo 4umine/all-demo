@@ -12,32 +12,28 @@
     <spring.version>4.3.2.RELEASE</spring.version>
     <quartz.version>2.2.1</quartz.version>
     <activemq.version>5.7.0</activemq.version>
-    <activemq-pool>5.14.3</activemq-pool>
+    <mysql.version>5.1.38</mysql.version>
+    <atomikos.version>3.7.0</atomikos.version>
+    <jta.version>1.1</jta.version>
+    <atomikos.jms.version>3.9.3</atomikos.jms.version>
+
+    <cglib.version>3.2.4</cglib.version>
+    <junit.version>3.8.2</junit.version>
   </properties>
 
   <dependencies>
     <dependency>
-      <groupId>junit</groupId>
-      <artifactId>junit</artifactId>
-      <version>3.8.1</version>
-      <scope>test</scope>
-    </dependency>
-
-    <dependency>
       <groupId>cglib</groupId>
       <artifactId>cglib</artifactId>
-      <version>3.2.4</version>
+      <version>${cglib.version}</version>
     </dependency>
 
-    <dependency>
-      <groupId>org.springframework</groupId>
-      <artifactId>spring-aop</artifactId>
-      <version>4.3.2.RELEASE</version>
-    </dependency>
+    <!--junit -->
     <dependency>
       <groupId>junit</groupId>
       <artifactId>junit</artifactId>
-      <version>RELEASE</version>
+      <version>${junit.version}</version>
+      <scope>test</scope>
     </dependency>
 
     <!-- Spring and springmvc -->
@@ -114,6 +110,49 @@
       <groupId>org.apache.activemq</groupId>
       <artifactId>activemq-pool</artifactId>
       <version>5.14.3</version>
+    </dependency>
+
+    <dependency>
+      <groupId>mysql</groupId>
+      <artifactId>mysql-connector-java</artifactId>
+      <version>${mysql.version}</version>
+    </dependency>
+
+    <!-- 分布式事务 -->
+
+    <dependency>
+      <groupId>com.atomikos</groupId>
+      <artifactId>transactions-jdbc</artifactId>
+      <version>${atomikos.version}</version>
+    </dependency>
+
+    <dependency>
+      <groupId>com.atomikos</groupId>
+      <artifactId>transactions-jms</artifactId>
+      <version>${atomikos.jms.version}</version>
+    </dependency>
+
+    <dependency>
+      <groupId>com.atomikos</groupId>
+      <artifactId>transactions-osgi</artifactId>
+      <version>3.9.0</version>
+    </dependency>
+
+    <dependency>
+      <groupId>javax.transaction</groupId>
+      <artifactId>jta</artifactId>
+      <version>${jta.version}</version>
+    </dependency>
+
+    <dependency>
+      <artifactId>xbean</artifactId>
+      <groupId>org.apache.xbean</groupId>
+      <version>3.7</version>
+    </dependency>
+    <dependency>
+      <groupId>junit</groupId>
+      <artifactId>junit</artifactId>
+      <version>RELEASE</version>
     </dependency>
 
   </dependencies>

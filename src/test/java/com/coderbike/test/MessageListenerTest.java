@@ -25,9 +25,15 @@ public class MessageListenerTest extends BaseTest {
 
     @Test
     public void sendMsg() {
-        for (int i=0; i<2; i++) {
-            produceService.sendMsg(destination, "消息" + i);
-        }
+        //for (int i=0; i<2; i++) {
+        //    produceService.sendMsg(destination, "生产者：" + i);
+        //}
+        produceService.sendMsg(destination, "我是消息");
+    }
+
+    @Test
+    public void sendThrowExp() {
+        produceService.sendMsg(destination, "测试抛异常事务回滚");
     }
 
 }
